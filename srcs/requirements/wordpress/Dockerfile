@@ -12,6 +12,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     php-intl \
     php-zip \
     curl \
+    wget \
+    unzip \
     ca-certificates \
  && rm -rf /var/lib/apt/lists/*
 
@@ -20,11 +22,10 @@ RUN mkdir -p /run/php /var/www/html \
 
 COPY conf/www.conf /etc/php/8.2/fpm/pool.d/www.conf
 
-RUN <<EOF
-rm -rf /var/www/html/*
-echo "<?php phpinfo(); ?>" > /var/www/html/index.php
-chown www-data:www-data /var/www/html/index.php
-EOF
+RUN curl -o /tmp/wordpress.tar.gz -sSL https://wordpress.org/latest.tar.gz \
+ && tar -xzf /tmp/wordpress.tar.gz -C /var/www/ --strip-components=1 \
+ && rm /tmp/wordpress.tar.gz \
+ && chown -R www-data:www-data /var/www/html
 
 WORKDIR /var/www/html
 
