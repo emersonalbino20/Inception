@@ -1,5 +1,39 @@
 services:
   nginx:
     build: requirements/nginx
+    image: nginx
+    container_name: nginx
+    restart: always
     ports:
       - "${NGINX_PORT}:443"
+    volumes:
+      - wordpress_files:/var/www/html
+    depends_on:
+      - wordpress
+    networks:
+      - inception
+
+
+  wordpress:
+    build: requirements/wordpress
+    image: wordpress
+    container_name: wordpress
+    restart: always
+    expose:
+      - "${PFM_PORT}"
+    volumes:
+      - wordpress_files:/var/www/html
+    networks:
+      - inception
+
+volumes:
+  wordpress_files:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /home/ealbino/data/wordpress
+
+networks:
+  inception:
+    driver: bridge

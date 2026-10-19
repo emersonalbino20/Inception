@@ -16,9 +16,20 @@ server {
     ssl_ciphers HIGH:!aNULL:!MD5;
     ssl_prefer_server_ciphers on;
 
+    root /var/www/html;
+    index index.php index.html index.htm;
+
+    access_log /var/log/nginx/app.acess.log;
+    error_log /var/log/nginx/app.error.log;
+
     location / {
-        root /var/www/html;
-        index index.html index.htm index.nginx-debian.html;
-        try_files $uri $uri/ =404;
+        try_files $uri $uri/ /index.php?$args;
     }
+
+    location ~ \.php$ {
+         include snippets/fastcgi-php.conf;
+         fastcgi_pass wordpress:9000;
+         fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+     }
+
 }

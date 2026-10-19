@@ -13,10 +13,7 @@ RUN mkdir -p /etc/nginx/ssl && \
         -subj "/C=AO/ST=Luanda/L=Luanda/O=42/OU=Inception/CN=ealbino.42.fr" \
         -addext "subjectAltName=DNS:ealbino.42.fr"
 
-COPY config/default /etc/nginx/sites-available/default
-
-
-RUN nginx -t
+COPY conf/default /etc/nginx/sites-available/default
 
 ENTRYPOINT ["nginx"]
 
