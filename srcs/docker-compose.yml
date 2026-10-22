@@ -26,6 +26,21 @@ services:
     networks:
       - inception
 
+  mariadb:
+    build: requirements/mariadb
+    image: mariadb
+    container_name: mariadb
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    volumes:
+      - mariadb_data:/var/lib/mysql
+    networks:
+      - inception
+
 volumes:
   wordpress_files:
     driver: local
@@ -33,6 +48,13 @@ volumes:
       type: none
       o: bind
       device: /home/ealbino/data/wordpress
+  
+  mariadb_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /home/ealbino/data/mariadb
 
 networks:
   inception:
