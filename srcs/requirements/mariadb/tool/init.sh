@@ -1,31 +1,32 @@
 #!/bin/bash
 
+set -e
+
 if [ ! -d "/var/lib/mysql/mysql" ]; then
-    chown -R mysql:mysql /var/lib/mysql
+    echo "Initializing data directory..."
     mysql_install_db --user=mysql --datadir=/var/lib/mysql > /dev/null
+fi
 
-    temp_file=`mktemp`
-    if [ ! -f "$temp_file" ]; then
-        return 1
-    fi
+mysqld --skip-networking --socket=/run/mysqld/mysqld.sock --user=mysql &
+pid="$!"
 
-    cat << EOF > $temp_file
-USE mysql;
-FLUSH PRIVILEGES;
+until mysqladmin --socket=/run/mysqld/mysqld.sock ping >/dev/null 2>&1; do
+    sleep 1
+done
 
-ALTER USER 'root'@'localhost' IDENTIFIED BY '${MYSQL_ROOT_PASSWORD}';
+DB_ROOT_PWD=$(cat "${MYSQL_ROOT_PASSWORD_FILE}")
+DB_USER_PWD=$(cat "${MYSQL_PASSWORD_FILE}")
 
-CREATE DATABASE IF NOT EXISTS \`${MYSQL_DATABASE}\`;
-
-CREATE USER IF NOT EXISTS '${MYSQL_USER}'@'%' IDENTIFIED BY '${MYSQL_PASSWORD}';
-GRANT ALL PRIVILEGES ON \`${MYSQL_DATABASE}\`.* TO '${MYSQL_USER}'@'%';
-
+mysql --socket=/run/mysqld/mysqld.sock -u root << EOF
+ALTER USER 'root'@'localhost' IDENTIFIED BY '${DB_ROOT_PWD}';
+CREATE DATABASE IF NOT EXISTS ${MYSQL_DATABASE};
+CREATE USER IF NOT EXISTS '${MYSQL_USER}'@'%' IDENTIFIED BY '${DB_USER_PWD}';
+GRANT ALL PRIVILEGES ON ${MYSQL_DATABASE}.* TO '${MYSQL_USER}'@'%';
 FLUSH PRIVILEGES;
 EOF
 
-    # Executa os comandos SQL em background
-    mysqld --user=mysql --bootstrap < $temp_file
-    rm -f $temp_file
-fi
+mysqladmin --socket=/run/mysqld/mysqld.sock -u root -p"${DB_ROOT_PWD}" shutdown
 
-exec mysqld_safe --user=mysql
+wait "$pid" || true
+
+exec mysqld --user=mysql --datadir=/var/lib/mysql --socket=/run/mysqld/mysqld.sock

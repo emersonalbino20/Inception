@@ -31,6 +31,8 @@ RUN chmod +x /usr/local/bin/entrypoint.sh
 
 WORKDIR /var/www/html
 
+EXPOSE 9000
+
 ENTRYPOINT ["entrypoint.sh"]
 
 CMD ["php-fpm8.2", "-F"]
