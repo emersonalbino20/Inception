@@ -2,6 +2,7 @@ FROM debian:bookworm
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     php-fpm \
+    php-cli \
     php-mysqli \
     php-curl \
     php-gd \
@@ -23,6 +24,12 @@ RUN curl -o /tmp/wordpress.tar.gz -sSL https://wordpress.org/latest.tar.gz \
  && tar -xzf /tmp/wordpress.tar.gz -C /var/www/wordpress_temp --strip-components=1 \
  && rm /tmp/wordpress.tar.gz \
  && chown -R www-data:www-data /var/www/wordpress_temp
+
+RUN curl -fsSL \
+    https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar \
+    -o /usr/local/bin/wp \
+ && chmod +x /usr/local/bin/wp \
+ && wp --info
 
 COPY conf/www.conf /etc/php/8.2/fpm/pool.d/www.conf
 
